@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Purchase Confirmation</title>
+    <style>
+        /* Insert your CSS styles here */
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2, h3, h4, h5, h6 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        p {
+            margin-bottom: 10px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #007bff;
+            color: #fff;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Course Purchase Confirmation</h2>
+        <p>Dear User,</p>
+        <p>We're delighted to inform you that you have successfully enrolled in the "<%= order.name %>" course! Here are
+                the details:</p>
+        <ul>
+            <li><strong>Order ID:</strong>
+                <%= order._id %>
+            </li>
+            <li><strong>Course:</strong>
+                <%= order.name %>
+            </li>
+            <li><strong>Instructor:</strong> Darshan Thakkar</li>
+            <li><strong>Price:</strong>
+                <%= order.price %>
+            </li>
+        </ul>
+        <p>You now have access to the course materials and resources. Start learning and enhancing your skills right away!
+        </p>
+        <p>If you have any questions or need assistance, please feel free to <a href="darshanthakkar782@gmail.com">contact
+                our support team</a>.</p>
+        <p>Happy learning!</p>
+        <a href="#" class="button">Access Your Course</a>
+    </div>
+</body>
+</html>
