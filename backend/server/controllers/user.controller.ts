@@ -105,7 +105,7 @@ interface IActivationRequest {
   activation_code: string;
 }
 
-export const activatUser = CatchAsyncError(
+export const activateUser = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { activation_token, activation_code } =

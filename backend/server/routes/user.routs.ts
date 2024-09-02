@@ -1,6 +1,7 @@
 import express from "express";
 import {
-  activatUser,
+  activateUser,
+  
   deleteUser,
   getAllUsers,
   getUserInfo,
@@ -19,7 +20,7 @@ import { refreshTokenOption } from "../utils/jwt";
 const userRouter = express.Router();
 
 userRouter.post("/registration", registrationUser);
-userRouter.post("/activationUser", activatUser);
+userRouter.post("/activate-user", activateUser);   // changed activate-user  activationUser
 userRouter.post("/login", loginUser);
 userRouter.get("/logout", isAuthenticated, logoutUser);
 userRouter.get("/refresh", updateAccessToken);

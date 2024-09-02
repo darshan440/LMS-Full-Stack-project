@@ -15,7 +15,7 @@ const sendMail = async (option: EmailOption): Promise<void> => {
     host: process.env.SMTP_HOST,
     port: parseInt(process.env.SMTP_PORT || "587"),
     service: process.env.SMTP_SERVICE,
-    secure: false, // Use true for port 465, false for other ports
+    secure: true, // Use true for port 465, false for other ports
     logger: true,
 
     auth: {
