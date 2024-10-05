@@ -7,21 +7,23 @@ import jwt, { JwtPayload, Secret } from "jsonwebtoken";
 import ejs from "ejs";
 import path from "path";
 import sendMail from "../utils/sendMail";
-import { Interface } from "readline";
-import { error } from "console";
+
 import {
   acceptTokenOptions,
   refreshTokenOption,
   sendToken,
 } from "../utils/jwt";
 import { redis } from "../utils/redis";
-import { exitCode } from "process";
-import { getAllUsersService, getUserById, updateUserRoleService } from "../services/user.services";
-import { StringExpressionOperatorReturningBoolean } from "mongoose";
+
+import {
+  getAllUsersService,
+  getUserById,
+  updateUserRoleService,
+} from "../services/user.services";
+
 import cloudinary from "cloudinary";
-import { triggerAsyncId } from "async_hooks";
+
 import CourseModel from "../models/course.model";
-import { resolve } from "path/posix";
 
 // registerUser
 interface IRegistrationBody {
@@ -92,7 +94,7 @@ export const createActivationTokenUser = (user: any): IActivationToken => {
     },
     process.env.ACTIVATION_SECRET as Secret,
     {
-      expiresIn: "5m",
+      expiresIn: "25m",
     }
   );
 
@@ -200,61 +202,95 @@ export const logoutUser = CatchAsyncError(
 export const updateAccessToken = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const access_token = req.cookies.access_token as string;
+
+      if (access_token) {
+        try {
+          // Verify the access token
+          const decoded = jwt.verify(
+            access_token,
+            process.env.ACCESS_TOKEN as string
+          ) as JwtPayload;
+
+          // Access token is still valid
+          if (decoded && decoded.exp && decoded.exp * 1000 > Date.now()) {
+            console.log("Access token is still valid.");
+            req.user = JSON.parse(
+              (await redis.get(decoded.id as string)) || "{}"
+            );
+            return next();
+          }
+        } catch (err: any) {
+          // Catch specific token expiration error
+          if (err.name === "TokenExpiredError") {
+            console.log("Access token expired, attempting to refresh.");
+            // Proceed to refresh token logic below
+          } else {
+            // If there's another error, throw it
+            return next(new ErrorHandler(err.message, 400));
+          }
+        }
+      }
+
+      // Proceed to refresh token if no valid access token is found
       const refresh_token = req.cookies.refresh_token as string;
-      const decoded = jwt.verify(
+
+      if (!refresh_token) {
+        console.log("No refresh token found.");
+        return next(
+          new ErrorHandler("Please login to access this resource", 400)
+        );
+      }
+
+      const decodedRefresh = jwt.verify(
         refresh_token,
         process.env.REFRESH_TOKEN as string
       ) as JwtPayload;
 
-      // Check if the refresh token is valid and decoded
-      if (!decoded) {
-        return next(new ErrorHandler("Failed to refresh token", 400));
+      if (!decodedRefresh) {
+        return next(
+          new ErrorHandler("User session not found. Please log in again.", 400)
+        );
       }
 
-      // Retrieve user session from Redis
-      const session = await redis.get(decoded.id as string);
+      const session = await redis.get(decodedRefresh.id as string);
 
-      // Check if user session is available
       if (!session) {
-        return next(new ErrorHandler("Plese Login To Access This Resources!", 400));
+        return next(
+          new ErrorHandler("Please login to access this resource", 400)
+        );
       }
 
-      // Parse user session
       const user = JSON.parse(session);
 
-      // Generate new access token
-      const accessToken = jwt.sign(
-        { id: user._id },
+      // Generate new tokens
+      const newAccessToken = jwt.sign(
+        { id: user._id, role: user.role, name: user.name },
         process.env.ACCESS_TOKEN as string,
-        { expiresIn: "5m" }
+        { expiresIn: "25m" }
       );
-
-      // Generate new refresh token
-      const refreshToken = jwt.sign(
+      const newRefreshToken = jwt.sign(
         { id: user._id },
         process.env.REFRESH_TOKEN as string,
         { expiresIn: "3d" }
       );
 
-      // Set user in request object
       req.user = user;
 
-      // Set new access and refresh tokens in response cookies
-      res.cookie("access_token", accessToken, acceptTokenOptions);
-      res.cookie("refresh_token", refreshToken, refreshTokenOption);
+      // Set new tokens in cookies
+      res.cookie("access_token", newAccessToken, acceptTokenOptions);
+      res.cookie("refresh_token", newRefreshToken, refreshTokenOption);
 
-      await redis.set(user._id, JSON.stringify(user), "EX", 604800); //7 days in sec
+      await redis.set(user._id, JSON.stringify(user), "EX", 604800); // 7 days in sec
 
-      // Respond with success status and new access token
-      res.status(200).json({
-        status: "success",
-        accessToken,
-      });
+      console.log("New access token generated and sent.");
+      next();
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 400));
     }
   }
 );
+
 
 // Middleware
 export const getUserInfo = CatchAsyncError(
@@ -318,14 +354,6 @@ export const updateUserInfo = CatchAsyncError(
 
       if (!user) {
         return next(new ErrorHandler("User not found", 404));
-      }
-
-      if (email) {
-        const isEmailExist = await userModel.findOne({ email });
-        if (isEmailExist && isEmailExist._id.toString() !== userId) {
-          return next(new ErrorHandler("Email is already taken", 400));
-        }
-        user.email = email;
       }
 
       if (name) {
@@ -541,48 +569,49 @@ export const addReplyToReview = CatchAsyncError(
   }
 );
 // get all user - only for admin
-export const getAllUsers = CatchAsyncError(async (req: Request, res: Response, next:NextFunction
-) => {
-  
-  try {
-    getAllUsersService(res);
-  } catch (error :any) {
-    return next(new ErrorHandler(error.messege, 404))
+export const getAllUsers = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      getAllUsersService(res);
+    } catch (error: any) {
+      return next(new ErrorHandler(error.messege, 404));
+    }
   }
-})
+);
 
 // update role of user --------------------------------------------------------------------------------------------------------------------
 
-export const updateUserRole = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { id, role } = req.body;
-    updateUserRoleService(res, id, role);
-  } catch (error :any) {
-    
+export const updateUserRole = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id, role } = req.body;
+      updateUserRoleService(res, id, role);
+    } catch (error: any) {}
   }
-})
+);
 
 // delete user ---------------------------------------------------------------------------------------------------------------------
 
-export const deleteUser = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { id } = req.params;
+export const deleteUser = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
 
-    const user = userModel.findById(id);
+      const user = userModel.findById(id);
 
-    if (!user) {
-      return next(new ErrorHandler("User Not Found!", 404));
+      if (!user) {
+        return next(new ErrorHandler("User Not Found!", 404));
+      }
+      await user.deleteOne();
+
+      await redis.del(id);
+
+      res.status(200).json({
+        success: true,
+        messege: "User Deleted Successfully",
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.messege, 400));
     }
-    await user.deleteOne();
-    
-    await redis.del(id);
-
-    res.status(200).json({
-      success: true,
-      messege: "User Deleted Successfully",
-
-    })
-  } catch (error:any) {
-    return next(new ErrorHandler(error.messege, 400));
   }
-})
+);

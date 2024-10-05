@@ -1,5 +1,5 @@
 import GoogleProvider from 'next-auth/providers/google';
-import GithubProvider from 'next-auth/providers/google';
+import GithubProvider from 'next-auth/providers/github';
 import NextAuth from 'next-auth/next';
 import { Providers } from '@/app/Provider';
 import { Exo } from 'next/font/google';

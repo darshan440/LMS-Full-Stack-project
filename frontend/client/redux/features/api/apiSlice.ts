@@ -1,5 +1,5 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { userLoggedIn } from '../auth/authSlice';
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { userLoggedIn } from "../auth/authSlice";
 
 export const apiSlice = createApi({
   reducerPath: "api",
@@ -8,14 +8,14 @@ export const apiSlice = createApi({
   }),
   endpoints: (builder) => ({
     refreshToken: builder.query({
-      query: (data) => ({
+      query: () => ({
         url: "refresh",
         method: "GET",
         credentials: "include" as const,
       }),
     }),
     loadUser: builder.query({
-      query: (data) => ({
+      query: () => ({
         url: "me",
         method: "GET",
         credentials: "include" as const,
@@ -25,7 +25,7 @@ export const apiSlice = createApi({
           const result = await queryFulfilled;
           dispatch(
             userLoggedIn({
-              accessToken: result.data.activationToken,
+              token: result.data.activationToken,
               user: result.data.user,
             })
           );
@@ -37,4 +37,4 @@ export const apiSlice = createApi({
   }),
 });
 
-export const {useRefreshTokenQuery , useLoadUserQuery} = apiSlice;
+export const { useRefreshTokenQuery, useLoadUserQuery } = apiSlice;

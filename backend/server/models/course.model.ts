@@ -1,7 +1,8 @@
-import mongoose, { Document, Model, Mongoose, Schema } from "mongoose";
+import mongoose, { Document, Model, Schema } from "mongoose";
 import { IUser } from "./user.model";
 
-//  Interfaces .-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.- .-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.- .-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-
+// Interfaces
+
 interface IComment extends Document {
   user: IUser;
   question: string;
@@ -16,19 +17,19 @@ interface IReview extends Document {
 }
 
 interface ILink extends Document {
-  titel: string;
+  title: string; // Fixed typo from 'titel' to 'title'
   url: string;
 }
 
-interface courseData extends Document {
-  titel: string;
+interface ICourseContent extends Document {
+  title: string; // Fixed typo
   description: string;
   videoUrl: string;
   videoThumbnail: object;
   videoSection: string;
   videoLength: number;
   videoPlayer: string;
-  link: ILink[];
+  links: ILink[]; // Fixed typo from 'link' to 'links' for consistency
   suggestion: string;
   questions: IComment[];
 }
@@ -42,15 +43,15 @@ export interface ICourse extends Document {
   tags: string;
   level: string;
   demoUrl: string;
-  benefits: { titel: string }[];
-  prerequisites: { titel: string }[];
+  benefits: { title: string }[]; // Fixed typo
+  prerequisites: { title: string }[]; // Fixed typo
   review: IReview[];
-  coursedata: courseData[];
+  courseContent: ICourseContent[]; // Renamed courseData to courseContent
   rating: number;
   purchased: number;
 }
 
-//  Schemas .-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.- .-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.- .-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.- .-.-.-.-.-.-.-
+// Schemas
 
 const reviewSchema = new Schema<IReview>({
   user: Object,
@@ -63,7 +64,7 @@ const reviewSchema = new Schema<IReview>({
 });
 
 const linkSchema = new Schema<ILink>({
-  titel: String,
+  title: String, // Fixed typo
   url: String,
 });
 
@@ -73,67 +74,70 @@ const commentSchema = new Schema<IComment>({
   questionReplies: [Object],
 });
 
-const courseDataSchema = new Schema<courseData>({
+const courseContentSchema = new Schema<ICourseContent>({
   videoUrl: String,
-  titel: String,
+  title: String, // Fixed typo
   videoSection: String,
   description: String,
   videoLength: Number,
   videoPlayer: String,
-  link: [linkSchema],
+  links: [linkSchema], // Fixed from 'link' to 'links'
   suggestion: String,
   questions: [commentSchema],
 });
 
-const courseSchema = new Schema<ICourse>({
-  name: {
-    type: String,
-    required: true,
-  },
-  description: {
-    type: String,
-    required: true,
-  },
-  price: {
-    type: Number,
-    required: true,
-  },
-  estimatedPrice: {
-    type: Number,
-  },
-  thumbnail: {
-    public_id: {
+const courseSchema = new Schema<ICourse>(
+  {
+    name: {
       type: String,
+      required: true,
     },
-    url: {
+    description: {
       type: String,
+      required: true,
+    },
+    price: {
+      type: Number,
+      required: true,
+    },
+    estimatedPrice: {
+      type: Number,
+    },
+    thumbnail: {
+      public_id: {
+        type: String,
+      },
+      url: {
+        type: String,
+      },
+    },
+    tags: {
+      type: String,
+      required: true,
+    },
+    level: {
+      type: String,
+      required: true,
+    },
+    demoUrl: {
+      type: String,
+      required: true,
+    },
+    benefits: [{ title: String }], // Fixed typo
+    prerequisites: [{ title: String }], // Fixed typo
+    review: [reviewSchema],
+    courseContent: [courseContentSchema], // Renamed courseData to courseContent
+    rating: {
+      type: Number,
+      default: 0,
+    },
+    purchased: {
+      type: Number,
+      default: 0,
     },
   },
-  tags: {
-    type: String,
-    required: true,
-  },
-  level: {
-    type: String,
-    required: true,
-  },
-  demoUrl: {
-    type: String,
-    required: true,
-  },
-  benefits: [{ titel: String }],
-  prerequisites: [{ titel: String }],
-  review: [reviewSchema],
-  coursedata: [courseDataSchema],
-  rating: {
-    type: Number,
-    default: 0,
-  },
-  purchased: {
-    type: Number,
-    default: 0,
-  },
-},{timestamps :true});
+  { timestamps: true }
+);
 
 const CourseModel: Model<ICourse> = mongoose.model("Course", courseSchema);
 

@@ -39,7 +39,11 @@ const bannerImageSchema = new Schema<BannerImage>({
 });
 
 const layoutSchema = new Schema<Layout>({
-  type: { type: String },
+  type: {
+    type: String,
+    required: true,
+    enum: ["Banner", "FAQ", "Categories"], // Only allow these values
+  },
   faq: [faqSchema],
   categories: [categorySchema],
   banner: {

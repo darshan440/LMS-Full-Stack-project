@@ -8,7 +8,7 @@ const Hero: FC<Props> = (props) => {
   return (
     <div className="w-full h-screen flex justify-center items-center relative bg-white dark:bg-black">
       <div className="flex w-full h-full">
-        <div className="w-1.3/3  flex justify-center items-center">
+        <div className="w-1.3/3  flex  justify-center items-center">
           <div className="flex justify-center items-center  hero_animation bg-gray-100 dark:bg-gray-800 rounded-full  p-5 ">
             <Image
               src={require("../../../../IMGS/—Pngtree—web developer isometric illustration_6067558.png")}
@@ -37,7 +37,7 @@ const Hero: FC<Props> = (props) => {
           </div>
           <div className="1500px:w-[55%] 1100px:w-[78%] w-[90%] flex items-center mt-6">
             <Image
-              src={require("../../../../IMGS/user1.png")}
+              src={require("../../../../IMGS/user2.png")}
               alt="Student 1"
               className="rounded-full shadow-md"
               width={50}
